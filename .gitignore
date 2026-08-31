@@ -1,0 +1,39 @@
+# Data & large artifacts (kept out of git; regenerate via scripts/)
+data/
+embeddings/
+wandb/
+outputs/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.npy
+*.npz
+*.faiss
+
+# Env / secrets
+.env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Notebooks
+.ipynb_checkpoints/

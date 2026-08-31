@@ -1,0 +1,30 @@
+# Core runtime (CPU-friendly). For GPU torch, see requirements-gpu.txt.
+# Pinned loosely with lower bounds; exact versions are frozen in the README
+# repro section after the first successful run.
+numpy>=1.26,<3
+pandas>=2.1
+scipy>=1.11
+scikit-learn>=1.4
+pyyaml>=6.0
+tqdm>=4.66
+requests>=2.31
+
+# Protein language models / modeling
+torch>=2.2
+transformers>=4.44
+peft>=0.11
+accelerate>=0.33
+safetensors>=0.4
+
+# Experiment tracking (used in offline mode by default)
+wandb>=0.17
+
+# Serving
+fastapi>=0.111
+uvicorn[standard]>=0.30
+pydantic>=2.7
+
+# Dev / test
+pytest>=8.0
+httpx>=0.27          # FastAPI TestClient
+ruff>=0.5

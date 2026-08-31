@@ -1,0 +1,11 @@
+# GPU torch build for NVIDIA (CUDA 12.4). Install BEFORE requirements.txt:
+#
+#   pip install -r requirements-gpu.txt --index-url https://download.pytorch.org/whl/cu124
+#   pip install -r requirements.txt
+#
+# Verified target: NVIDIA GTX 1650 (4 GB), driver 592, compute 7.5.
+# 4 GB VRAM notes:
+#   - ESM-2 650M embedding extraction: OK in fp16, batch=1, chunk long seqs.
+#   - LoRA fine-tune of 650M: does NOT fit; use ESM-2 150M locally, or the
+#     Colab notebook (notebooks/colab_lora.ipynb) for the 650M flagship run.
+torch>=2.2
