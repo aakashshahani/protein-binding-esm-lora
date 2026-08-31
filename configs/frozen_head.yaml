@@ -1,0 +1,31 @@
+# (b) Frozen ESM-2 + token-classification head (comparable to CLAPE-SMB's setup).
+model: frozen_head
+seed: 42
+
+embeddings:
+  model_id: facebook/esm2_t33_650M_UR50D
+  dim: 1280
+  add_physchem: false
+
+head:
+  hidden: 512
+  dropout: 0.2
+  num_layers: 2          # MLP layers over per-residue embeddings
+
+train:
+  epochs: 25
+  batch_size: 16
+  lr: 5.0e-4
+  weight_decay: 1.0e-5
+  optimizer: adam
+  scheduler: reduce_on_plateau
+  scheduler_patience: 3
+  early_stop_patience: 6
+  grad_clip: 1.0
+  amp: true
+
+loss:
+  type: focal
+  focal_gamma: 2.0
+  focal_alpha: 0.25
+  pos_weight: auto

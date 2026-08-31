@@ -1,0 +1,51 @@
+# (c) ESM-2 fine-tuned with LoRA/PEFT for per-residue binding classification.
+#
+# Two honest tracks (README reports both, labeled by hardware):
+#   - local:  esm2_t30_150M_UR50D, fits the 4 GB GTX 1650 with grad checkpointing.
+#   - colab:  esm2_t33_650M_UR50D, run on a free Colab T4 (16 GB) — flagship.
+# Select with:  python scripts/train.py --config configs/lora.yaml --track local
+model: lora
+seed: 42
+
+tracks:
+  local:
+    model_id: facebook/esm2_t30_150M_UR50D
+    batch_size: 1
+    grad_accum: 16
+    grad_checkpointing: true
+    max_len: 512
+    amp: true
+  colab:
+    model_id: facebook/esm2_t33_650M_UR50D
+    batch_size: 4
+    grad_accum: 4
+    grad_checkpointing: true
+    max_len: 1022
+    amp: true
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.1
+  # ESM-2 attention/MLP projection names
+  target_modules: ["query", "key", "value", "dense"]
+  bias: none
+
+head:
+  dropout: 0.2
+
+train:
+  epochs: 8
+  lr: 2.0e-4
+  weight_decay: 1.0e-4
+  optimizer: adamw
+  scheduler: cosine
+  warmup_ratio: 0.06
+  early_stop_patience: 3
+  grad_clip: 1.0
+
+loss:
+  type: focal
+  focal_gamma: 2.0
+  focal_alpha: 0.25
+  pos_weight: auto

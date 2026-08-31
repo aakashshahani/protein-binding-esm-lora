@@ -1,0 +1,54 @@
+# Data sources, exact releases, and split policy.
+# Every field here is recorded into data/DATA_RELEASE.json by download_data.py.
+
+seed: 42
+
+# ---- Primary benchmark: CLAPE-SMB / UniProtSMB (directly comparable) ----
+# Snapshot of UniProtKB reviewed proteins w/ 3D structures + small-molecule
+# binding sites as of 2024-04-17 (per the CLAPE-SMB paper, J. Cheminformatics
+# 2024, https://doi.org/10.1186/s13321-024-00920-2).
+# Records are 3-line format: ">ID" / sequence / per-residue 0-1 label string.
+clape_smb:
+  repo: "JueWangTHU/CLAPE-SMB"
+  ref: "main"                       # pinned to a commit SHA by download_data.py
+  snapshot_date: "2024-04-17"
+  files:
+    train: "Raw_data/UniProtSMB/train_UniProtSMB.txt"
+    valid: "Raw_data/UniProtSMB/valid_UniProtSMB.txt"
+    test:  "Raw_data/UniProtSMB/test_UniProtSMB.txt"
+  # Additional labeled sets shipped in the repo, used for external checks:
+  extra:
+    idp:        "Raw_data/IDP.txt"           # intrinsically-disordered proteins
+    scpdb:      "Raw_data/Standard datasets/scpdb.txt"
+    coach420:   "Raw_data/Standard datasets/coach420.txt"
+
+# ---- Cross-dataset generalization source (stretch goal #9): BioLiP2 ----
+# Not used for the comparable numbers; used only to test external validity.
+biolip2:
+  base_url: "https://zhanggroup.org/BioLiP/download"
+  # weekly text dumps; exact file + retrieval date captured at download time
+  enabled: false
+
+# ---- UniProt canonical sequences (verification / BioLiP2 mapping) ----
+uniprot:
+  fasta_url: "https://rest.uniprot.org/uniprotkb/{acc}.fasta"
+
+# ---- Redundancy reduction (anti-leakage) ----
+# We adopt CLAPE-SMB's published test split for comparability, AND independently
+# cluster with MMseqs2 to (1) audit train<->test homology, (2) build grouped
+# CV folds so homologs never span folds.
+mmseqs:
+  min_seq_id: 0.30
+  coverage: 0.80
+  cov_mode: 0
+  cluster_mode: 0
+  # run via Docker for reproducibility (no native Windows build)
+  docker_image: "ghcr.io/soedinglab/mmseqs2:latest"
+
+cv:
+  n_folds: 5
+  group_by: "mmseqs_cluster"        # GroupKFold over cluster ids
+
+# residues longer than this are chunked with overlap during embedding
+max_len: 1022
+chunk_overlap: 64

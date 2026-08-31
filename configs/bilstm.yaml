@@ -1,0 +1,38 @@
+# (a) BiLSTM baseline on cached ESM-2 embeddings — the honest classical baseline.
+model: bilstm
+seed: 42
+
+embeddings:
+  model_id: facebook/esm2_t33_650M_UR50D
+  dim: 1280
+  add_physchem: true          # concat 7 lightweight physicochemical features
+
+bilstm:
+  hidden_size: 256
+  num_layers: 2
+  dropout: 0.3
+  bidirectional: true
+
+train:
+  epochs: 30
+  batch_size: 16              # sequences per batch (padded + masked)
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  optimizer: adam
+  scheduler: reduce_on_plateau   # on val AUPRC
+  scheduler_patience: 3
+  early_stop_patience: 6
+  grad_clip: 1.0
+  amp: true
+
+loss:
+  type: focal            # {bce, weighted_bce, focal}
+  focal_gamma: 2.0
+  focal_alpha: 0.25
+  pos_weight: auto       # used when type=weighted_bce; auto = neg/pos ratio
+
+# grid searched by scripts/train.py --grid (logged to W&B)
+grid:
+  bilstm.hidden_size: [128, 256]
+  train.lr: [1.0e-3, 5.0e-4]
+  loss.type: [focal, weighted_bce]
