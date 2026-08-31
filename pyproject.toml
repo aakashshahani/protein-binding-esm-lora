@@ -17,6 +17,8 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# make `tests` (for tests.conftest) and `pbsite` importable under bare `pytest`
+pythonpath = [".", "src"]
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.ruff]
