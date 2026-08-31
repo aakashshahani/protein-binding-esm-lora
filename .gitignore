@@ -1,9 +1,10 @@
 # Data & large artifacts (kept out of git; regenerate via scripts/)
-data/
-embeddings/
-wandb/
-outputs/
-checkpoints/
+# Anchored to repo root so they don't match the src/pbsite/data package.
+/data/
+/embeddings/
+/wandb/
+/outputs/
+/checkpoints/
 *.pt
 *.pth
 *.ckpt
