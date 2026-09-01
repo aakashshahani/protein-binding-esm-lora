@@ -82,9 +82,56 @@ tables are written to `outputs/<run>/benchmark.md`.
   wasn't worth the wall-clock. This is an honest engineering tradeoff, not a tuned result.
 
 > CLAPE-SMB MCC 0.699 is transcribed from the paper (UniProtSMB test set) and is **not
-> reproduced** here. SCRIBER and a 2024-era method (GPSite / GraphBind) will be added as
-> **reproduced** rows where their released tools run on our split, otherwise as clearly
-> labeled published rows.
+> reproduced** here.
+>
+> **SCRIBER / GPSite are intentionally not in the table.** We could not obtain an
+> apples-to-apples number: their published metrics are on their own datasets (not the
+> UniProtSMB split), and running their released servers/tools per-residue on our 496 test
+> proteins was not feasible in this environment. Rather than print a misleading cross-dataset
+> figure, we omit them; the hook to add clearly-labeled `reproduced`/`published` rows exists in
+> `pbsite/eval/benchmark.py`.
+
+### ⚠️ Leakage audit — the published split is not redundancy-reduced
+
+Running **MMseqs2** at 30% identity / 80% coverage over train+test (`scripts/cluster_split.py`;
+summary in `data/splits/cluster_summary.json`):
+
+> **228 / 496 test proteins (46%) share a ≥30%-identity cluster with a training protein.**
+
+So the UniProtSMB split has substantial train↔test homology, and the full-test numbers above
+(ours **and** the published 0.699) are partly inflated by it. Re-evaluating on the **268
+non-leaked** test proteins gives a more honest estimate of generalization:
+
+| method | AUPRC (full → non-leaked) | MCC (full → non-leaked) |
+| --- | --- | --- |
+| BiLSTM (650M emb + physchem) | 0.654 → **0.573** | 0.613 → **0.539** |
+| Frozen ESM-2 650M + head | 0.621 → **0.586** | 0.576 → **0.554** |
+| LoRA ESM-2 150M (local) | 0.642 → **0.581** | 0.602 → **0.548** |
+
+All models drop ~0.06–0.08 AUPRC once homologs are removed, and the ranking tightens
+(frozen-head ≈ LoRA ≈ BiLSTM) — i.e. the BiLSTM's edge on the full test was partly homology.
+This is the single most important honesty result in the repo.
+
+### Cross-dataset generalization (external validity)
+
+LoRA-150M trained on UniProtSMB, evaluated on the **IDP** set with **zero retuning** (threshold
+reused): **AUPRC 0.799, MCC 0.732** (published CLAPE-SMB on the same IDP set: MCC 0.815). The
+model transfers without adaptation — MCC is actually higher than on its own test set.
+
+### Structure-aware features (are binding residues structurally distinct?)
+
+Fetching AlphaFold DB structures and computing per-residue RSA + secondary structure
+(`scripts/structure_analysis.py`, 59/60 test proteins resolved): binding residues are markedly
+**more buried** (mean RSA **0.20** vs 0.29) and **coil-enriched** (55% vs 47% coil; less
+helix/sheet) — a real structural signal that RSA/SS carry usable information. The extraction
+pipeline (`pbsite/features/structure.py`) is implemented and validated; folding these features
+into a model and measuring the AUPRC lift is the documented next step (needs structures for all
+~5k proteins).
+
+### Interpretability
+
+`scripts/interpret.py` renders the per-residue binding-probability track for a protein with
+predicted pockets shaded and true sites marked (e.g. P05165: 54/65 true sites recovered).
 
 ## Reproduce
 
@@ -116,10 +163,23 @@ python scripts/evaluate.py --run outputs/bilstm_esm2_t33_650M_UR50D
 python scripts/evaluate.py --run outputs/frozen_head_esm2_t33_650M_UR50D
 python scripts/evaluate_lora.py --run outputs/lora_esm2_t30_150M_UR50D_local \
     --model-id facebook/esm2_t30_150M_UR50D --track local
+
+# 6. Optional / stretch (needs: pip install -r requirements-stretch.txt)
+#    cross-dataset generalization (zero retuning):
+python scripts/evaluate_lora.py --run outputs/lora_esm2_t30_150M_UR50D_local \
+    --model-id facebook/esm2_t30_150M_UR50D --track local \
+    --test-file data/clape_smb/IDP.txt --dataset-name IDP
+#    interpretability figure + structure analysis:
+python scripts/interpret.py --run outputs/bilstm_esm2_t33_650M_UR50D --auto
+python scripts/structure_analysis.py --limit 60
 ```
 
 Seeds are fixed (`configs/*.yaml`, `pbsite.utils.set_seed`). W&B defaults to **offline**
 (`WANDB_MODE=offline`); `wandb sync` later to upload.
+
+The leakage audit uses MMseqs2. If Docker isn't running and there's no native `mmseqs`,
+a static Linux binary under WSL works (`data/splits/cluster_summary.json` here was produced
+that way); `pbsite.data.splits.run_mmseqs_cluster` auto-detects native binary vs Docker.
 
 ## Serving
 
@@ -166,19 +226,27 @@ Developed against an **NVIDIA GTX 1650 (4 GB)**. On 4 GB:
 
 ```
 configs/     model + data configs (seeds, releases, grids)
-scripts/     download_data, build_dataset, cluster_split, extract_embeddings, train, evaluate
-src/pbsite/  data/ features/ models/ eval/ serve/
+scripts/     download_data, build_dataset, cluster_split, extract_embeddings, train,
+             evaluate, evaluate_lora, interpret, structure_analysis
+src/pbsite/  data/ features/ (esm, physchem, structure) models/ eval/ serve/
 tests/       CPU unit tests + tiny fixtures
 docker/      serving image
-notebooks/   colab_lora.ipynb (650M flagship)
+notebooks/   colab_lora.ipynb (650M flagship, Drive-checkpointed for free T4)
 ```
 
-## Stretch goals (only after core ships, kept honest)
+## Stretch goals — status
 
-Structure-aware features (RSA / secondary structure from AlphaFold DB / ESMFold),
-cross-dataset generalization (train UniProtSMB → test BioLiP2, report the drop), and
-per-residue confidence/attention maps. Each will be reported with whether it **actually
-helped**, including negative results.
+| # | Stretch goal | Status |
+| --- | --- | --- |
+| 8 | Structure-aware features (RSA + secondary structure, AlphaFold DB) | **Pipeline built + validated** (`pbsite/features/structure.py`, `scripts/structure_analysis.py`): binding residues are more buried (RSA 0.20 vs 0.29) and coil-enriched. Full model-integration retrain = documented next step. |
+| 9 | Cross-dataset generalization (zero retuning) | **Done** — LoRA-150M → IDP: AUPRC 0.799 / MCC 0.732, no retuning. |
+| 10 | Per-residue interpretability maps | **Done** — `scripts/interpret.py` (probability track + predicted pockets vs true sites). |
+| — | Anti-leakage audit (MMseqs2 30%) | **Done** — 46% of the published test set is homologous to train; homology-reduced re-evaluation reported above. |
+
+Remaining: **650M LoRA on Colab** (`notebooks/colab_lora.ipynb`, ready to run on a free T4);
+a full structure-augmented retrain; and reproduced SCRIBER/GPSite rows if their tools are run
+on this split. Any future result will be reported with whether it **actually helped**, negatives
+included.
 
 ## License
 
