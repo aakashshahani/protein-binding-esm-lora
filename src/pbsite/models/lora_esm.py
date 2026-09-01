@@ -28,6 +28,9 @@ class LoraESMTokenClassifier(nn.Module):
         self.backbone = AutoModel.from_pretrained(model_id)
         if grad_checkpointing:
             self.backbone.gradient_checkpointing_enable()
+            # Required so gradients flow to LoRA params through checkpointed layers
+            # on an otherwise-frozen base model.
+            self.backbone.enable_input_require_grads()
         hidden = self.backbone.config.hidden_size
 
         peft_cfg = LoraConfig(
