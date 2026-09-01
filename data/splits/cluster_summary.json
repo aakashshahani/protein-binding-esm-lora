@@ -1,0 +1,15 @@
+{
+  "min_seq_id": 0.3,
+  "coverage": 0.8,
+  "n_train": 3972,
+  "n_test": 496,
+  "n_sequences_clustered": 4468,
+  "n_clusters": 2996,
+  "leakage": {
+    "n_test": 496,
+    "n_leaked": 228
+  },
+  "leakage_pct": 45.97,
+  "cv_folds": 5,
+  "tool": "MMseqs2 easy-cluster (WSL static avx2), 30% id, 80% cov"
+}

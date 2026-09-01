@@ -1,0 +1,18 @@
+{
+  "n_proteins_requested": 60,
+  "n_with_structure": 59,
+  "mean_RSA_binding": 0.204,
+  "mean_RSA_nonbinding": 0.293,
+  "ss_fraction_binding": {
+    "a": 0.327,
+    "b": 0.125,
+    "c": 0.548
+  },
+  "ss_fraction_nonbinding": {
+    "a": 0.382,
+    "b": 0.151,
+    "c": 0.467
+  },
+  "n_binding_residues": 679,
+  "n_nonbinding_residues": 23873
+}
