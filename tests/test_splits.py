@@ -9,6 +9,23 @@ def test_parse_cluster_tsv(tmp_path):
     assert mapping["repB"] == "repB"
 
 
+def test_parse_cluster_tsv_crlf_robust(tmp_path):
+    # MMseqs2 fed a CRLF FASTA embeds \r into IDs; parser must strip it and not
+    # mis-split on the carriage return (regression test).
+    tsv = tmp_path / "c.tsv"
+    tsv.write_bytes(b"repA\r\trepA\r\nrepA\r\tmem1\r\nrepB\r\trepB\r\n")
+    mapping = parse_cluster_tsv(tsv)
+    assert mapping == {"repA": "repA", "mem1": "repA", "repB": "repB"}
+
+
+def test_write_fasta_uses_lf(tmp_path):
+    from pbsite.data.clape import Record
+    from pbsite.data.splits import write_fasta
+
+    write_fasta([Record("X", "MKT", (0, 1, 0))], tmp_path / "a.fasta")
+    assert b"\r" not in (tmp_path / "a.fasta").read_bytes()
+
+
 def test_audit_leakage():
     clusters = {"a": "c1", "b": "c1", "c": "c2", "d": "c3"}
     # test id 'b' shares cluster c1 with train id 'a' -> leaked

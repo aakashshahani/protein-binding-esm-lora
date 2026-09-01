@@ -19,7 +19,9 @@ def write_fasta(records: list[Record], path: str | Path) -> None:
     for r in records:
         lines.append(f">{r.id}")
         lines.append(r.seq)
-    Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # newline="\n": avoid Windows CRLF, which MMseqs2 would fold into sequence IDs
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write("\n".join(lines) + "\n")
 
 
 def run_mmseqs_cluster(
@@ -69,11 +71,17 @@ def run_mmseqs_cluster(
 def parse_cluster_tsv(tsv_path: str | Path) -> dict[str, str]:
     """MMseqs2 writes <rep>\\t<member> lines; map member -> rep (cluster id)."""
     mapping: dict[str, str] = {}
-    for line in Path(tsv_path).read_text(encoding="utf-8").splitlines():
+    # Read raw bytes and drop all carriage returns before splitting, so IDs that
+    # picked up a stray \r from a CRLF FASTA or a Windows/OneDrive copy still parse
+    # (reading as text would let universal-newline translation mangle embedded \r).
+    text = Path(tsv_path).read_bytes().decode("utf-8").replace("\r", "")
+    for line in text.split("\n"):
         if not line.strip():
             continue
-        rep, member = line.split("\t")[:2]
-        mapping[member] = rep
+        parts = line.split("\t")
+        if len(parts) < 2 or not parts[0] or not parts[1]:
+            continue
+        mapping[parts[1]] = parts[0]
     return mapping
 
 
