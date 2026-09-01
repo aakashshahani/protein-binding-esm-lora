@@ -1,0 +1,84 @@
+{
+  "downloaded_at_utc": "2026-08-31T21:22:43.178077+00:00",
+  "clape_smb": {
+    "repo": "JueWangTHU/CLAPE-SMB",
+    "commit": "998b378a7d30515d325ae66277e8ffbfd2733d6f",
+    "snapshot_date": "2024-04-17"
+  },
+  "files": {
+    "train": {
+      "path": "data\\clape_smb\\train_UniProtSMB.txt",
+      "sha256": "29ebdc55374d38f1503b0ad0383fe38d3197b3c39efa17d0b81d7cd65a63e0c3"
+    },
+    "valid": {
+      "path": "data\\clape_smb\\valid_UniProtSMB.txt",
+      "sha256": "de113e7a9b18790f66110b205d017ba9455b0ace8390a1b298e6800f2c70b9ae"
+    },
+    "test": {
+      "path": "data\\clape_smb\\test_UniProtSMB.txt",
+      "sha256": "474bea34b8f47f7d937857db297d235073313853730c966d79bc5b3cc7bf0296"
+    },
+    "idp": {
+      "path": "data\\clape_smb\\IDP.txt",
+      "sha256": "1c958130fd4d47425030209aab4d457d890c65e88c1994849a2b0ebc622fb4d0"
+    },
+    "scpdb": {
+      "path": "data\\clape_smb\\scpdb.txt",
+      "sha256": "2ed612998e7a68eb43c604dc98dee4b54a1d9c3598112218788b9e6fe8908fb2"
+    },
+    "coach420": {
+      "path": "data\\clape_smb\\coach420.txt",
+      "sha256": "a7a2afd350f838b9e8b3fa02734e4882f709c0386fe118b339ede1cac9679a56"
+    }
+  },
+  "stats": {
+    "train": {
+      "n_proteins": 3972,
+      "n_residues": 1682806,
+      "n_binding_residues": 46294,
+      "pos_fraction": 0.02751000412406421,
+      "min_len": 24,
+      "max_len": 1024,
+      "mean_len": 423.6671701913394
+    },
+    "valid": {
+      "n_proteins": 496,
+      "n_residues": 205218,
+      "n_binding_residues": 5898,
+      "pos_fraction": 0.02874016899102418,
+      "min_len": 69,
+      "max_len": 1008,
+      "mean_len": 413.7459677419355
+    },
+    "test": {
+      "n_proteins": 496,
+      "n_residues": 205848,
+      "n_binding_residues": 5568,
+      "pos_fraction": 0.027049084761571644,
+      "min_len": 49,
+      "max_len": 1012,
+      "mean_len": 415.01612903225805
+    },
+    "idp": {
+      "n_proteins": 336,
+      "n_residues": 190903,
+      "n_binding_residues": 3729,
+      "pos_fraction": 0.019533480353897004,
+      "min_len": 148,
+      "max_len": 1021,
+      "mean_len": 568.1636904761905
+    },
+    "scpdb": {
+      "n_proteins": 4305,
+      "n_residues": 1737840,
+      "n_binding_residues": 72579,
+      "pos_fraction": 0.041763913824057454,
+      "min_len": 76,
+      "max_len": 1784,
+      "mean_len": 403.6794425087108
+    },
+    "coach420": {
+      "parse_error": "data\\clape_smb\\coach420.txt: line count 1261 is not a multiple of 3"
+    }
+  }
+}

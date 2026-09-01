@@ -1,0 +1,33 @@
+{
+  "source": "CLAPE-SMB / UniProtSMB",
+  "snapshot_date": "2024-04-17",
+  "splits": {
+    "train": {
+      "n_proteins": 3972,
+      "n_residues": 1682806,
+      "n_binding_residues": 46294,
+      "pos_fraction": 0.02751000412406421,
+      "min_len": 24,
+      "max_len": 1024,
+      "mean_len": 423.6671701913394
+    },
+    "valid": {
+      "n_proteins": 496,
+      "n_residues": 205218,
+      "n_binding_residues": 5898,
+      "pos_fraction": 0.02874016899102418,
+      "min_len": 69,
+      "max_len": 1008,
+      "mean_len": 413.7459677419355
+    },
+    "test": {
+      "n_proteins": 496,
+      "n_residues": 205848,
+      "n_binding_residues": 5568,
+      "pos_fraction": 0.027049084761571644,
+      "min_len": 49,
+      "max_len": 1012,
+      "mean_len": 415.01612903225805
+    }
+  }
+}
