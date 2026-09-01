@@ -1,0 +1,4 @@
+# Optional dependencies for the stretch-goal features (not needed for the core
+# pipeline, tests, or CI). Install with: pip install -r requirements-stretch.txt
+matplotlib>=3.8     # scripts/interpret.py  (per-residue probability maps)
+biotite>=1.0        # pbsite/features/structure.py  (AlphaFold RSA + secondary structure)
