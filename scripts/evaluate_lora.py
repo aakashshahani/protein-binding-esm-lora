@@ -50,6 +50,10 @@ def main() -> None:
     ap.add_argument("--track", default="local")
     ap.add_argument("--data-dir", default="data")
     ap.add_argument("--win", type=int, default=510)
+    ap.add_argument("--test-file", default=None,
+                    help="path to a CLAPE-format test file; default = UniProtSMB test")
+    ap.add_argument("--dataset-name", default="UniProtSMB test",
+                    help="label for the benchmark table / output files")
     args = ap.parse_args()
 
     run = Path(args.run)
@@ -73,7 +77,10 @@ def main() -> None:
 
     model = Wrapped()
 
-    test = parse_clape_file(Path(args.data_dir) / "clape_smb" / "test_UniProtSMB.txt")
+    test_path = Path(args.test_file) if args.test_file else \
+        Path(args.data_dir) / "clape_smb" / "test_UniProtSMB.txt"
+    test = parse_clape_file(test_path)
+    print(f"Evaluating on {test_path} ({len(test)} proteins) as '{args.dataset_name}'")
     ys, ps = [], []
     for i, r in enumerate(test, 1):
         prob = score_sequence(model, tok, r.seq, device, args.win, torch)
@@ -87,25 +94,35 @@ def main() -> None:
     metrics = residue_metrics(y_true, y_prob, threshold=threshold)
     print("LoRA test metrics:", json.dumps(metrics, indent=2))
 
-    meta = {
-        "model_type": "lora", "model_id": args.model_id, "track": args.track,
-        "threshold": threshold, "best_val_auprc": float(val["auprc"]), "win": args.win,
-    }
-    (run / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    (run / "test_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    is_default = args.test_file is None
+    slug = "".join(c if c.isalnum() else "_" for c in args.dataset_name.lower()).strip("_")
+    mfile = run / ("test_metrics.json" if is_default else f"test_metrics_{slug}.json")
+    bmd = run / ("benchmark.md" if is_default else f"benchmark_{slug}.md")
+    bjson = run / ("benchmark.json" if is_default else f"benchmark_{slug}.json")
 
-    table = BenchmarkTable(dataset="UniProtSMB test")
+    if is_default:  # meta.json describes the model; only write on the canonical run
+        meta = {
+            "model_type": "lora", "model_id": args.model_id, "track": args.track,
+            "threshold": threshold, "best_val_auprc": float(val["auprc"]), "win": args.win,
+        }
+        (run / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    mfile.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+
+    table = BenchmarkTable(dataset=args.dataset_name)
     table.add(BenchmarkRow(
         method=f"LoRA ({args.model_id.split('/')[-1]}, {args.track})",
         auprc=metrics["auprc"], auroc=metrics["auroc"], f1=metrics["f1"],
         precision=metrics["precision"], recall=metrics["recall"], mcc=metrics["mcc"],
-        source="ours", note=f"stopped at best val epoch; {args.track} track",
+        source="ours",
+        note=("stopped at best val epoch; " + args.track + " track") if is_default
+        else "cross-dataset (trained on UniProtSMB, threshold reused, no retuning)",
     ))
-    for row in PUBLISHED:
-        table.add(row)
-    table.save_json(run / "benchmark.json")
-    (run / "benchmark.md").write_text(table.to_markdown() + "\n", encoding="utf-8")
-    print(f"\nWrote {run}/benchmark.md and meta.json")
+    if is_default:  # published reference is UniProtSMB-specific
+        for row in PUBLISHED:
+            table.add(row)
+    table.save_json(bjson)
+    bmd.write_text(table.to_markdown() + "\n", encoding="utf-8")
+    print(f"\nWrote {bmd}")
 
 
 if __name__ == "__main__":
