@@ -113,6 +113,16 @@ All models drop ~0.06–0.08 AUPRC once homologs are removed, and the ranking ti
 (frozen-head ≈ LoRA ≈ BiLSTM) — i.e. the BiLSTM's edge on the full test was partly homology.
 This is the single most important honesty result in the repo.
 
+### Cluster-grouped cross-validation
+
+5-fold GroupKFold over the training set, folds keyed by 30%-identity cluster so homologs never
+span folds (`scripts/cross_validate.py`, `outputs/cv_bilstm.json`) — BiLSTM:
+
+> **AUPRC 0.567 ± 0.028 · AUROC 0.947 ± 0.008 · F1 0.539 ± 0.019 · MCC 0.526 ± 0.020**
+
+This matches the homology-reduced test (AUPRC 0.573), so the honest generalization level is
+**~0.57 AUPRC** — the leakage-free number, not the 0.65 inflated by train↔test homology.
+
 ### Cross-dataset generalization (external validity)
 
 LoRA-150M trained on UniProtSMB, evaluated on the **IDP** set with **zero retuning** (threshold
