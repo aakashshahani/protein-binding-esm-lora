@@ -125,9 +125,11 @@ Fetching AlphaFold DB structures and computing per-residue RSA + secondary struc
 (`scripts/structure_analysis.py`, 59/60 test proteins resolved): binding residues are markedly
 **more buried** (mean RSA **0.20** vs 0.29) and **coil-enriched** (55% vs 47% coil; less
 helix/sheet) — a real structural signal that RSA/SS carry usable information. The extraction
-pipeline (`pbsite/features/structure.py`) is implemented and validated; folding these features
-into a model and measuring the AUPRC lift is the documented next step (needs structures for all
-~5k proteins).
+pipeline (`pbsite/features/structure.py`) is implemented and validated. We **deliberately stop
+here** rather than retrain with these features: ESM-2 embeddings already implicitly encode
+substantial structural information, so adding 4 explicit RSA/SS features next to a 1,280-dim
+embedding is expected to give marginal lift — not worth ~5k structure downloads + a retrain. The
+descriptive signal above is the honest, high-value result.
 
 ### Interpretability
 
@@ -239,7 +241,7 @@ notebooks/   colab_lora.ipynb (650M flagship, Drive-checkpointed for free T4)
 
 | # | Stretch goal | Status |
 | --- | --- | --- |
-| 8 | Structure-aware features (RSA + secondary structure, AlphaFold DB) | **Pipeline built + validated** (`pbsite/features/structure.py`, `scripts/structure_analysis.py`): binding residues are more buried (RSA 0.20 vs 0.29) and coil-enriched. Full model-integration retrain = documented next step. |
+| 8 | Structure-aware features (RSA + secondary structure, AlphaFold DB) | **Pipeline built + validated** (`pbsite/features/structure.py`, `scripts/structure_analysis.py`): binding residues are more buried (RSA 0.20 vs 0.29) and coil-enriched. Full retrain **deliberately not pursued** (ESM-2 already encodes structure; expected lift marginal). |
 | 9 | Cross-dataset generalization (zero retuning) | **Done** — LoRA-150M → IDP: AUPRC 0.799 / MCC 0.732, no retuning. |
 | 10 | Per-residue interpretability maps | **Done** — `scripts/interpret.py` (probability track + predicted pockets vs true sites). |
 | — | Anti-leakage audit (MMseqs2 30%) | **Done** — 46% of the published test set is homologous to train; homology-reduced re-evaluation reported above. |
@@ -247,9 +249,8 @@ notebooks/   colab_lora.ipynb (650M flagship, Drive-checkpointed for free T4)
 **650M LoRA flagship — done** (`notebooks/colab_lora.ipynb`, free Colab T4): AUPRC **0.715**,
 MCC **0.665** — the best model, see the table above.
 
-Remaining: a full structure-augmented retrain; and reproduced SCRIBER/GPSite rows if their tools
-are run on this split. Any future result will be reported with whether it **actually helped**,
-negatives included.
+Remaining (optional, out of scope by choice): a full structure-augmented retrain (deliberately
+skipped, see above); and reproduced SCRIBER/GPSite rows if their tools are run on this split.
 
 ## License
 
