@@ -62,21 +62,22 @@ tables are written to `outputs/<run>/benchmark.md`.
 
 | method | source | AUPRC | AUROC | F1 | precision | recall | MCC |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| **BiLSTM** (ESM-2 650M emb + physchem) | ours | **0.654** | 0.958 | 0.623 | 0.630 | 0.616 | **0.613** |
+| **LoRA ESM-2 650M (Colab T4)** | ours | **0.715** | 0.965 | 0.673 | 0.700 | 0.648 | **0.665** |
+| BiLSTM (ESM-2 650M emb + physchem) | ours | 0.654 | 0.958 | 0.623 | 0.630 | 0.616 | 0.613 |
 | LoRA ESM-2 150M (local) | ours | 0.642 | 0.948 | 0.611 | 0.655 | 0.572 | 0.602 |
 | Frozen ESM-2 650M + head | ours | 0.621 | 0.945 | 0.585 | 0.636 | 0.541 | 0.576 |
-| LoRA ESM-2 650M (Colab) | ours | _pending_ | _pending_ | _pending_ | _pending_ | _pending_ | _pending_ |
 | CLAPE-SMB | **published** | — | — | — | — | — | **0.699** |
 
 **Honest reading of these results:**
-- The **BiLSTM over 650M embeddings is our strongest** model (AUPRC 0.654, MCC 0.613) — it
-  combines the largest encoder's features with sequential context and physicochemical
-  signals. LoRA-**150M** (0.642 / 0.602) is close behind despite fine-tuning a 4×-smaller
-  encoder; frozen-head (0.621 / 0.576) is last, as expected for a context-free per-residue MLP.
-- All three trail the published **CLAPE-SMB MCC 0.699**. That gap is expected: CLAPE-SMB
-  fine-tunes on the 650M encoder with contrastive pre-training, whereas our LoRA run here is
-  on 150M and our frozen/BiLSTM rungs don't fine-tune the encoder. The **650M LoRA (Colab)**
-  is the run most likely to close it — it's the pending flagship.
+- **LoRA fine-tuning the 650M encoder (Colab T4) is the strongest model** (AUPRC 0.715, MCC
+  0.665) — fine-tuning the full-size encoder beats every frozen-feature approach, exactly the
+  modeling-ladder story we set out to test. It closes most of the gap to the published
+  **CLAPE-SMB MCC 0.699** (0.665 vs 0.699); the remainder is plausibly their contrastive
+  pre-training, which we did not replicate.
+- Among the models that fit the local 4 GB GPU, the **BiLSTM over 650M embeddings** wins
+  (0.654 / 0.613): it combines the largest encoder's features with sequential context and
+  physicochemistry. LoRA-**150M** (0.642 / 0.602) is close behind despite a 4×-smaller encoder;
+  frozen-head (0.621 / 0.576) is last, as expected for a context-free per-residue MLP.
 - **LoRA-150M was stopped at its best validation epoch (epoch 5).** On the 4 GB GTX 1650 each
   epoch took ~2.6 h and validation AUPRC had already peaked (epoch 6 regressed), so continuing
   wasn't worth the wall-clock. This is an honest engineering tradeoff, not a tuned result.
@@ -243,10 +244,12 @@ notebooks/   colab_lora.ipynb (650M flagship, Drive-checkpointed for free T4)
 | 10 | Per-residue interpretability maps | **Done** — `scripts/interpret.py` (probability track + predicted pockets vs true sites). |
 | — | Anti-leakage audit (MMseqs2 30%) | **Done** — 46% of the published test set is homologous to train; homology-reduced re-evaluation reported above. |
 
-Remaining: **650M LoRA on Colab** (`notebooks/colab_lora.ipynb`, ready to run on a free T4);
-a full structure-augmented retrain; and reproduced SCRIBER/GPSite rows if their tools are run
-on this split. Any future result will be reported with whether it **actually helped**, negatives
-included.
+**650M LoRA flagship — done** (`notebooks/colab_lora.ipynb`, free Colab T4): AUPRC **0.715**,
+MCC **0.665** — the best model, see the table above.
+
+Remaining: a full structure-augmented retrain; and reproduced SCRIBER/GPSite rows if their tools
+are run on this split. Any future result will be reported with whether it **actually helped**,
+negatives included.
 
 ## License
 
