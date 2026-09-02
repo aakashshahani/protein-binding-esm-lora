@@ -38,3 +38,6 @@ Thumbs.db
 
 # Notebooks
 .ipynb_checkpoints/
+
+# Personal study guide — local only, never committed
+docs/STUDY_GUIDE.md
